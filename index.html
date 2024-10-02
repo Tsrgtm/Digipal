@@ -1,0 +1,923 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Raleway:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">  <!-- Include Feather Icons -->
+  <script src="https://unpkg.com/feather-icons"></script>
+  <script src="https://unpkg.com/gsap@3.9.1/dist/gsap.min.js"></script>
+  <script src="https://unpkg.com/gsap@3.9.1/dist/ScrollTrigger.min.js"></script>
+  <style>
+    body {
+        font-family: 'Montserrat', sans-serif;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      font-family: "Raleway", sans-serif;
+    }
+
+    .text-raleway {
+      font-family: "Raleway", sans-serif;
+    }
+
+    .text-libre {
+        font-family: 'Libre Baskerville', serif;
+    }
+
+    .text-montserrat {
+        font-family: 'Montserrat', sans-serif;
+    }
+
+    .active,
+    .active:hover {
+      background-color: #052e16 !important;
+      color: #86efac !important;
+    }
+
+
+    
+
+    .mega-menu {
+      transform: scale(0);
+      max-height: fit-content;
+      opacity: 0;
+      overflow: hidden;
+      transition: all .3s ease-in-out;
+    }
+
+    .mega-menu-active {
+      transform: scale(1);
+      max-height: fit-content;
+      opacity: 1;
+      transition: all .3s ease-in-out;
+    }
+
+    /* Active state for the services link */
+    .active-services {
+      background-color: #e2e8f0;
+      color: #1e293b;
+    }
+
+    /* Container for blurred background elements */
+    .blurred-bg-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      pointer-events: none; /* Prevent interaction with this container */
+      z-index: -1; /* Place behind other content */
+    }
+
+    /* Blurred background elements */
+    .blurred-bg {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(100px);
+      opacity: 0.6;
+      pointer-events: none; /* Prevent interaction with blurred elements */
+    }
+
+    /* Different blurred background elements */
+    .blurred-bg-1 {
+      width: 400px;
+      height: 400px;
+      top: 20%;
+      left: 10%;
+      background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+    }
+
+    .blurred-bg-2 {
+      width: 500px;
+      height: 500px;
+      top: 50%;
+      left: 60%;
+      background: linear-gradient(135deg, #a1c4fd, #c2e9fb);
+    }
+
+    .blurred-bg-3 {
+      width: 350px;
+      height: 350px;
+      top: 70%;
+      left: 30%;
+      background: linear-gradient(135deg, #fbc2eb, #a6c1ee);
+    }
+
+    .service-button,
+    .project-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: color 0.3s ease;
+    }
+
+    .service-button:hover {
+        color: #2563eb; /* Tailwind's blue-600 */
+    }
+
+    .project-btn:hover {
+      color: #fff;
+    }
+
+    .service-button:hover .icon ,
+    .project-btn:hover .icon{
+        transform: translateX(5px);
+    }
+
+    .icon {
+        transition: transform 0.3s ease;
+    }
+
+    /* Initial Card State */
+    .service-card {
+        opacity: 0;
+    }
+
+    @keyframes floating {
+      0%, 100% {
+        transform: translateY(0) scale(1);
+      }
+      50% {
+        transform: translateY(-10px) scale(1.05);
+      }
+    }
+
+    .animate-floating {
+      animation: floating 4s ease-in-out infinite;
+    }
+
+    @keyframes rotate {
+      0% {
+        transform: rotate(0deg);
+      }
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* Apply the rotation to the element */
+    .animate-rotating {
+      display: inline-block; /* Ensure the element rotates around its center */
+      animation: rotate 8s linear infinite; /* 5 seconds duration, linear speed, infinite loop */
+    }
+
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;  /* Internet Explorer 10+ */
+      scrollbar-width: none;  /* Firefox */
+    }
+
+    .active-tab,
+    .active-tab:hover {
+      background: #86efac !important; /* Green gradient */
+      color: #14532d !important;
+      border: 2px solid #166534;
+    }
+
+    .tab-item {
+      transition: all 0.3s ease; /* Smooth transition */
+    }
+
+    .magnetic {
+      transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth transition */
+      transform-style: preserve-3d; /* Enable 3D transforms */
+    }
+
+    /* Add perspective for a more 3D-like effect */
+    .magnetic-container {
+      perspective: 1000px;
+    }
+  </style>
+  <script>
+    const movementIntensity = 0.3; // Controls the movement intensity (0.1 for subtle, higher for stronger)
+    const rotationIntensity = 8; // Controls the rotation intensity
+    const shadowIntensity = '0 5px 15px rgba(0, 0, 0, 0.1)'; 
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const servicesLink = document.querySelector('#services-link');
+      const megaMenu = document.querySelector('#mega-menu');
+
+      // Toggle menu on click
+      servicesLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (megaMenu.classList.contains('mega-menu')) {
+          megaMenu.classList.add('mega-menu-active');
+          megaMenu.classList.remove('mega-menu');
+          servicesLink.classList.add('active-services');
+        } else {
+          megaMenu.classList.add('mega-menu');
+          megaMenu.classList.remove('mega-menu-active');
+          servicesLink.classList.remove('active-services');
+        }
+      });
+
+      // Close the menu when clicking outside
+      document.addEventListener('click', (e) => {
+        if (!megaMenu.contains(e.target) && !servicesLink.contains(e.target)) {
+          megaMenu.classList.add('mega-menu');
+          megaMenu.classList.remove('mega-menu-active');
+          servicesLink.classList.remove('active-services');
+        }
+      });
+
+      // Initialize Feather Icons
+      feather.replace();
+
+      document.querySelectorAll('.magnetic').forEach(link => {
+        link.addEventListener('mousemove', (e) => {
+          const rect = link.getBoundingClientRect();
+          const x = e.clientX - rect.left - rect.width / 2;
+          const y = e.clientY - rect.top - rect.height / 2;
+
+          // Apply translation based on cursor position
+          const translateX = (x / rect.width) * 20 * movementIntensity; // Adjust the multiplier for stronger effect
+          const translateY = (y / rect.height) * 20 * movementIntensity; // Adjust the multiplier for stronger effect
+
+          // Apply rotation based on cursor position
+          const rotateX = (y / rect.height) * rotationIntensity; // Adjust rotation intensity
+          const rotateY = -(x / rect.width) * rotationIntensity; // Adjust rotation intensity
+
+          // Apply the combined 3D transformation
+          link.style.transform = `translate(${translateX}px, ${translateY}px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+
+          // Apply shadow only if 'no-shadow' class is not present
+          if (!link.classList.contains('no-shadow')) {
+            link.style.boxShadow = shadowIntensity;
+          }
+        });
+
+        link.addEventListener('mouseleave', () => {
+          link.style.transform = 'translate(0, 0) rotateX(0) rotateY(0)'; // Reset position and rotation
+
+          // Remove shadow only if 'no-shadow' class is not present
+          if (!link.classList.contains('no-shadow')) {
+            link.style.boxShadow = 'none'; // Remove shadow
+          }
+        });
+      });
+
+    });
+  </script>
+</head>
+<body class="bg-gray-50 relative overflow-x-hidden">
+  <header class="container mx-auto py-4 flex justify-between items-center relative z-50" style="min-height: 72px;">
+    <div class="logo magnetic-container ps-6">
+      <a href="#">
+        <img src="./Digipal.svg" alt="" class="h-6 md:h-8 lg:h-10 magnetic no-shadow">
+      </a>
+    </div>
+
+    <!-- Fixed Menu Container -->
+    <div class="fixed bottom-0 lg:top-0 lg:left-1/2 lg:transform lg:-translate-x-1/2 lg:w-auto w-full flex flex-col items-center justify-start z-50 mb-4 lg:mt-4" style="height: fit-content !important;">
+  
+      <div class="menu p-1 bg-white bg-opacity-50 border backdrop-blur-md rounded-3xl relative">
+        <div class="menu-links flex items-center justify-center">
+          <a href="#" class="px-2 md:px-4 py-1 rounded-full hover:bg-slate-200 text-xs md:text-base hover:text-slate-800 transition-colors ease-in-out duration-300 active">Home</a>
+          <a href="#" class="px-2 md:px-4 py-1 rounded-full hover:bg-slate-200 text-xs md:text-base hover:text-slate-800 transition-colors ease-in-out duration-300">About</a>
+          <a href="#" class="px-2 md:px-4 py-1 rounded-full hover:bg-slate-200 text-xs md:text-base hover:text-slate-800 transition-colors ease-in-out duration-300">Work</a>
+          <a href="#" id="services-link" class="px-2 md:px-4 py-1 rounded-full text-xs md:text-base hover:bg-slate-200 hover:text-slate-800 transition-colors ease-in-out duration-300">Services</a>
+          <a href="#" class="px-2 md:px-4 py-1 rounded-full hover:bg-slate-200 text-xs md:text-base hover:text-slate-800 transition-colors ease-in-out duration-300">Insights</a>
+        </div>
+
+        <!-- Mega Menu -->
+        <div id="mega-menu" class="absolute bottom-full lg:top-full left-0 w-full bg-white mb-2 lg:mt-1 border p-4 rounded-2xl shadow-lg z-50 origin-bottom lg:origin-top mega-menu">
+          <h3 class="text-lg font-semibold mb-4">What We Do</h3>
+          <div class="grid grid-cols-2 gap-4 magnetic-container">
+            <a href="/social-media" class="magnetic block p-2 rounded-lg flex items-center border border-transparent hover:border-blue-500 hover:bg-blue-100 transition ease-in-out duration-300">
+              <i data-feather="hash" class="text-blue-500 mr-3" width="16" height="16"></i>
+              <span class="text-xs md:text-base">Social Media</span>
+            </a>
+            <a href="/podcast" class="magnetic block p-2 rounded-lg flex items-center border border-transparent hover:border-green-500 hover:bg-green-100 transition ease-in-out duration-300">
+              <i data-feather="mic" class="text-green-500 mr-3" width="16" height="16"></i>
+              <span class="text-xs md:text-base">Podcast</span>
+            </a>
+            <a href="/web-development" class="magnetic block p-2 rounded-lg flex items-center border border-transparent hover:border-purple-500 hover:bg-purple-100 transition ease-in-out duration-300">
+              <i data-feather="code" class="text-purple-500 mr-3" width="16" height="16"></i>
+              <span class="text-xs md:text-base">Websites</span>
+            </a>
+            <a href="/seo" class="magnetic block p-2 rounded-lg flex items-center border border-transparent hover:border-yellow-500 hover:bg-yellow-100 transition ease-in-out duration-300">
+              <i data-feather="search" class="text-yellow-500 mr-3" width="16" height="16"></i>
+              <span class="text-xs md:text-base">SEO</span>
+            </a>
+            <a href="/marketing" class="magnetic block p-2 rounded-lg flex items-center border border-transparent hover:border-red-500 hover:bg-red-100 transition ease-in-out duration-300">
+              <i data-feather="volume-2" class="text-red-500 mr-3" width="16" height="16"></i>
+              <span class="text-xs md:text-base">Marketing</span>
+            </a>
+            <a href="/commercial-ads" class="magnetic block p-2 rounded-lg flex items-center border border-transparent hover:border-pink-500 hover:bg-pink-100 transition ease-in-out duration-300">
+              <i data-feather="monitor" class="text-pink-500 mr-3" width="16" height="16"></i>
+              <span class="text-xs md:text-base">Commercial Ads</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <a href="#" class="pe-6">
+      <img src="./graphic.svg" alt="" class="h-6 md:h-8 lg:h-10 magnetic no-shadow">
+    </a>
+  </header>
+
+  <div class="blurred-bg-container">
+    <div class="blurred-bg blurred-bg-1"></div>
+    <div class="blurred-bg blurred-bg-2"></div>
+    <div class="blurred-bg blurred-bg-3"></div>
+  </div>
+
+  <main class="relative" style="margin-top: -72px;">
+
+    <section id="hero-section" class="container magnetic-container mx-auto flex flex-col md:flex-row items-center justify-center pt-32 pb-20 pb-12 min-h-screen px-6 gap-8">
+      <!-- Left Content -->
+      <div class="w-full md:w-1/2 flex flex-col items-start justify-center">
+        <h1 class="text-5xl md:text-7xl font-bold mb-4 opacity-0 hero-title">Empowering Your Digital Future</h1>
+        <h2 class="text-3xl md:text-4xl font-semibold mb-6 opacity-0 hero-subtitle">Innovate. Inspire. Impact.</h2>
+        <p class="text-lg md:text-xl mb-8 opacity-0 hero-description">Our expert team specializes in digital marketing, web design, and influencer campaigns to create meaningful connections with your audience. It's time to make your brand’s digital footprint unforgettable.</p>
+        <a href="#" class="gsap-button animated-btn magnetic flex gap-3 mt-2 items-center px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-full shadow-lg hover:bg-gradient-to-r hover:from-blue-700 hover:to-blue-900 transition ease-in-out duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-blue-300 relative overflow-hidden">
+          <!-- Highlight for 3D effect -->
+          <div class="absolute inset-0 bg-white opacity-10 rounded-full pointer-events-none transform translate-y-1/4 blur-sm"></div>
+          Discover More
+          <i data-feather="arrow-right" class="icon ml-2" width="18" height="18"></i>
+        </a>
+      </div>
+  
+      <div class="w-full md:w-1/2 flex items-center justify-center overflow-hidden">
+        <!-- Background Image -->
+        <img src="globe.png" alt="Digital Marketing" class="inset-0 hero-image object-cover rounded-lg opacity-0" style="width: 100%; height: auto;">
+    
+        <!-- <div class="absolute inset-0 hero-info-cards magnetic-container">
+            <div class="absolute magnetic p-3 bg-gradient-to-r from-blue-400 to-blue-600 bg-opacity-60 rounded-lg border border-white shadow-sm info-card animate-floating flex items-center" style="top: 10%; left: 20%;">
+                <i data-feather="award" class="text-white mr-2" width="20" height="20"></i>
+                <span class="text-xs md:text-sm font-medium text-white">4+ Years of Experience</span>
+            </div>
+            <div class="absolute magnetic p-3 bg-gradient-to-r from-yellow-400 to-yellow-600 bg-opacity-60 rounded-lg border border-white shadow-sm info-card animate-floating flex items-center" style="top: 50%; left: 30%;">
+                <i data-feather="code" class="text-white mr-2" width="20" height="20"></i>
+                <span class="text-xs md:text-sm font-medium text-white">Web Design & Development</span>
+            </div>
+            <div class="absolute magnetic p-3 bg-gradient-to-r from-green-400 to-green-600 bg-opacity-60 rounded-lg border border-white shadow-sm info-card animate-floating flex items-center" style="top: 70%; left: 50%;">
+                <i data-feather="briefcase" class="text-white mr-2" width="20" height="20"></i>
+                <span class="text-xs md:text-sm font-medium text-white">Professional & Expert Team</span>
+            </div>
+        </div> -->
+      </div>
+    
+    
+    </section>
+
+    <section id="about-section" class="container mx-auto flex flex-col md:flex-row-reverse items-center justify-center py-16 px-6 gap-10 relative">
+      <!-- Left Side: About Title, Description, Button -->
+      <div class="w-full md:w-1/2 flex flex-col items-start justify-center z-10">
+          <h2 class="text-4xl md:text-5xl font-bold mb-4 opacity-0 about-title">Digital Magic Makers</h2>
+          <p class="text-lg md:text-lg mb-6 opacity-0 about-description">
+              We’re the wizards of digital marketing, here to sprinkle some magic dust on your brand’s online presence. With over 4 years of experience, our expert team crafts strategies that captivate audiences, drive engagement, and turn clicks into loyal customers. From influencer marketing to SEO, we make sure your brand is seen, heard, and loved in all the right places. Ready to create some marketing magic that sets you apart? Let’s get started!
+          </p>
+          <a href="#" class="gsap-button animated-btn magnetic flex gap-3 mt-2 items-center px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-full shadow-lg hover:bg-gradient-to-r hover:from-blue-700 hover:to-blue-900 transition ease-in-out duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-blue-300 relative overflow-hidden">
+              <!-- Highlight for 3D effect -->
+              <div class="absolute inset-0 bg-white opacity-10 rounded-full pointer-events-none transform translate-y-1/4 blur-sm"></div>
+              About Us
+              <i data-feather="arrow-right" class="icon ml-2" width="18" height="18"></i>
+          </a>
+      </div>
+  
+      <!-- Right Side: Cards with Animation -->
+      <div class="w-full md:w-1/2 grid grid-cols-1 md:grid-cols-2 gap-8 right-side-content magnetic-container">
+          <!-- Card 1 -->
+          <div class="relative magnetic border p-6 bg-blue-50 rounded-lg shadow-lg transform transition hover:scale-105 hover:shadow-xl opacity-0 about-card-item">
+              <div class="flex items-center gap-4 mb-4">
+                  <div class="p-3 bg-blue-100 rounded-full">
+                      <i data-feather="star" class="text-blue-600" width="30" height="30"></i>
+                  </div>
+                  <h3 class="text-2xl font-bold">#1</h3>
+              </div>
+              <p class="text-gray-600">Proven track record of delivering exceptional results in digital marketing.</p>
+          </div>
+  
+          <!-- Card 2 -->
+          <div class="relative magnetic border p-6 bg-green-50 rounded-lg shadow-lg transform transition hover:scale-105 hover:shadow-xl opacity-0 about-card-item">
+              <div class="flex items-center gap-4 mb-4">
+                  <div class="p-3 bg-green-100 rounded-full">
+                      <i data-feather="user-check" class="text-green-600" width="30" height="30"></i>
+                  </div>
+                  <h3 class="text-2xl font-bold">#2</h3>
+              </div>
+              <p class="text-gray-600">A dedicated team of certified experts committed to your success.</p>
+          </div>
+  
+          <!-- Card 3 -->
+          <div class="relative magnetic border p-6 bg-yellow-50 rounded-lg shadow-lg transform transition hover:scale-105 hover:shadow-xl opacity-0 about-card-item">
+              <div class="flex items-center gap-4 mb-4">
+                  <div class="p-3 bg-yellow-100 rounded-full">
+                      <i data-feather="thumbs-up" class="text-yellow-600" width="30" height="30"></i>
+                  </div>
+                  <h3 class="text-2xl font-bold">#3</h3>
+              </div>
+              <p class="text-gray-600">Trusted by hundreds of clients for our innovative solutions and results.</p>
+          </div>
+  
+          <!-- Card 4 -->
+          <div class="relative magnetic border p-6 bg-purple-50 rounded-lg shadow-lg transform transition hover:scale-105 hover:shadow-xl opacity-0 about-card-item">
+              <div class="flex items-center gap-4 mb-4">
+                  <div class="p-3 bg-purple-100 rounded-full">
+                      <i data-feather="trending-up" class="text-purple-600" width="30" height="30"></i>
+                  </div>
+                  <h3 class="text-2xl font-bold">#4</h3>
+              </div>
+              <p class="text-gray-600">Data-driven strategies that guarantee a competitive edge in the market.</p>
+          </div>
+      </div>
+    </section>
+
+    <section id="work-section" class="container mx-auto py-16 px-6 flex flex-col justify-center">
+      <!-- Section Title and Description -->
+      <div class="mb-8 opacity-0 work-title" style="max-width: 600px;">
+          <h2 class="text-4xl font-bold text-gray-800 mb-2">Crafted with Pride,<br> Delivered with Precision</h2>
+          <p class="text-lg text-gray-600">From jaw-dropping designs to marketing magic, we provide services that not only meet but exceed your business goals.</p>
+      </div>
+
+      <div id="all" class="tab-content opacity-0">
+          <!-- Grid Container -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 justify-items-start content-start magnetic-container">
+          <!-- Card 1 -->
+          <div class="relative magnetic bg-cover bg-center h-80 w-full  rounded-lg overflow-hidden shadow-lg" style="background-image: url('https://via.placeholder.com/400');">
+            <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent flex flex-col justify-end items-start p-4">
+
+              <span class="inline-block bg-blue-600 text-white text-xs font-semibold px-3 py-1 rounded-full mb-2">Category</span>
+
+              <h2 class="text-white text-2xl font-bold mb-4">Project Title</h2>
+
+              <a href="#" class="project-btn font-semibold text-sm text-gray-300 flex items-center">
+                View Project
+                <i data-feather="arrow-right" class="icon" width="18" height="18"></i>
+              </a>
+
+            </div>
+          </div>
+      
+          <!-- Card 2 -->
+          <div class="relative magnetic bg-cover bg-center h-80 w-full rounded-lg overflow-hidden shadow-lg" style="background-image: url('https://via.placeholder.com/400');">
+            <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent flex flex-col justify-end items-start p-4">
+              <span class="inline-block bg-green-600 text-white text-xs font-semibold px-3 py-1 rounded-full mb-2">Design</span>
+              <h2 class="text-white text-2xl font-bold mb-4">Creative Design</h2>
+              <a href="#" class="project-btn font-semibold text-sm text-gray-300 flex items-center">
+                View Project
+                <i data-feather="arrow-right" class="icon" width="18" height="18"></i>
+              </a>
+            </div>
+          </div>
+      
+          <!-- Card 3 -->
+          <div class="relative magnetic bg-cover bg-center h-80 w-full  rounded-lg overflow-hidden shadow-lg" style="background-image: url('https://via.placeholder.com/400');">
+            <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent flex flex-col justify-end items-start p-4">
+              <span class="inline-block bg-red-600 text-white text-xs font-semibold px-3 py-1 rounded-full mb-2">Development</span>
+              <h2 class="text-white text-2xl font-bold mb-4">Web Development</h2>
+              <a href="#" class="project-btn font-semibold text-sm text-gray-300 flex items-center">
+                View Project
+                <i data-feather="arrow-right" class="icon" width="18" height="18"></i>
+              </a>
+            </div>
+          </div>
+
+          <div class="relative magnetic bg-cover bg-center h-80 w-full  rounded-lg overflow-hidden shadow-lg" style="background-image: url('https://via.placeholder.com/400');">
+            <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent flex flex-col justify-end items-start p-4">
+
+              <span class="inline-block bg-blue-600 text-white text-xs font-semibold px-3 py-1 rounded-full mb-2">Category</span>
+
+              <h2 class="text-white text-2xl font-bold mb-4">Project Title</h2>
+
+              <a href="#" class="project-btn font-semibold text-sm text-gray-300 flex items-center">
+                View Project
+                <i data-feather="arrow-right" class="icon" width="18" height="18"></i>
+              </a>
+
+            </div>
+          </div>
+
+          <div class="relative magnetic bg-cover bg-center h-80 w-full  rounded-lg overflow-hidden shadow-lg" style="background-image: url('https://via.placeholder.com/400');">
+            <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent flex flex-col justify-end items-start p-4">
+
+              <span class="inline-block bg-blue-600 text-white text-xs font-semibold px-3 py-1 rounded-full mb-2">Category</span>
+
+              <h2 class="text-white text-2xl font-bold mb-4">Project Title</h2>
+
+              <a href="#" class="project-btn font-semibold text-sm text-gray-300 flex items-center">
+                View Project
+                <i data-feather="arrow-right" class="icon" width="18" height="18"></i>
+              </a>
+
+            </div>
+          </div>
+
+          <div class="relative magnetic bg-cover bg-center h-80 w-full  rounded-lg overflow-hidden shadow-lg" style="background-image: url('https://via.placeholder.com/400');">
+            <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent flex flex-col justify-end items-start p-4">
+
+              <span class="inline-block bg-blue-600 text-white text-xs font-semibold px-3 py-1 rounded-full mb-2">Category</span>
+
+              <h2 class="text-white text-2xl font-bold mb-4">Project Title</h2>
+
+              <a href="#" class="project-btn font-semibold text-sm text-gray-300 flex items-center">
+                View Project
+                <i data-feather="arrow-right" class="icon" width="18" height="18"></i>
+              </a>
+
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <div class="flex justify-center mt-12">
+        <a href="#" class="gsap-button text-gray-50 font-semibold px-5 py-3 rounded-full bg-blue-500 hover:bg-blue-700 transition ease-in-out duration-300">
+          View All Projects
+        </a>
+      </div>
+    </section>
+    
+    
+       
+          
+
+    <section class="services w-full py-8  min-h-screen flex flex-col justify-center px-6">
+      <div class="container mx-auto text-center mb-12" style="max-width: 600px;">
+          <h2 class="text-4xl font-bold mb-4">Stand Out, Digitally</h2>
+          <p class="text-lg text-gray-700">Explore services designed to propel your business forward—marketing, web design, SEO, and more, tailored to your brand's unique needs.</p>
+      </div>
+      
+      <!-- Services Container -->
+      <div id="service-section" class="container mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 magnetic-container">
+          <!-- Service Card -->
+          <div class="service-card bg-white p-6 rounded-lg border border-gray-200 shadow-md flex flex-col items-start magnetic">
+              <i data-feather="hash" class="text-blue-500 mb-4" width="40" height="40"></i>
+              <h3 class="text-2xl font-semibold mb-2">Social Media</h3>
+              <p class="text-gray-600 mb-4">Enhance your brand’s social media presence with our strategic expertise and targeted campaigns.</p>
+              <a href="#" class="service-button font-semibold text-sm flex items-center">
+                Learn More
+                <i data-feather="arrow-right" class="icon" width="18" height="18"></i>
+              </a>
+          </div>
+          
+          <!-- Service Card -->
+          <div class="service-card bg-white p-6 rounded-lg border border-gray-200 shadow-md flex flex-col items-start magnetic">
+              <i data-feather="mic" class="text-green-500 mb-4" width="40" height="40"></i>
+              <h3 class="text-2xl font-semibold mb-2">Podcast</h3>
+              <p class="text-gray-600 mb-4">Create compelling podcasts to engage your audience and elevate your brand’s storytelling approach.</p>
+              <a href="#" class="service-button font-semibold text-sm flex items-center">
+                Learn More
+                <i data-feather="arrow-right" class="icon" width="18" height="18"></i>
+              </a>
+          </div>
+          
+          <!-- Service Card -->
+          <div class="service-card bg-white p-6 rounded-lg border border-gray-200 shadow-md flex flex-col items-start magnetic">
+              <i data-feather="code" class="text-purple-500 mb-4" width="40" height="40"></i>
+              <h3 class="text-2xl font-semibold mb-2">Web Development</h3>
+              <p class="text-gray-600 mb-4">Build sleek, modern websites that drive engagement and provide an exceptional user experience.</p>
+              <a href="#" class="service-button font-semibold text-sm flex items-center">
+                Learn More
+                <i data-feather="arrow-right" class="icon" width="18" height="18"></i>
+              </a>
+          </div>
+          
+          <!-- Service Card -->
+          <div class="service-card bg-white p-6 rounded-lg border border-gray-200 shadow-md flex flex-col items-start magnetic">
+              <i data-feather="search" class="text-yellow-500 mb-4" width="40" height="40"></i>
+              <h3 class="text-2xl font-semibold mb-2">SEO</h3>
+              <p class="text-gray-600 mb-4">Optimize your website for search engines with our expert SEO services and proven strategies.</p>
+              <a href="#" class="service-button font-semibold text-sm flex items-center">
+                Learn More
+                <i data-feather="arrow-right" class="icon" width="18" height="18"></i>
+              </a>
+          </div>
+          
+          <!-- Service Card -->
+          <div class="service-card bg-white p-6 rounded-lg border border-gray-200 shadow-md flex flex-col items-start magnetic">
+              <i data-feather="volume-2" class="text-red-500 mb-4" width="40" height="40"></i>
+              <h3 class="text-2xl font-semibold mb-2">Marketing</h3>
+              <p class="text-gray-600 mb-4">Boost your brand’s visibility and reach with targeted marketing strategies tailored to your needs.</p>
+              <a href="#" class="service-button font-semibold text-sm flex items-center">
+                Learn More
+                <i data-feather="arrow-right" class="icon" width="18" height="18"></i>
+              </a>
+          </div>
+          
+          <!-- Service Card -->
+          <div class="service-card bg-white p-6 rounded-lg border border-gray-200 shadow-md flex flex-col items-start magnetic">
+              <i data-feather="monitor" class="text-pink-500 mb-4" width="40" height="40"></i>
+              <h3 class="text-2xl font-semibold mb-2">Commercial Ads</h3>
+              <p class="text-gray-600 mb-4">Create impactful commercial ads that captivate your audience and drive business results.</p>
+              <a href="#" class="service-button font-semibold text-sm flex items-center">
+                Learn More
+                <i data-feather="arrow-right" class="icon" width="18" height="18"></i>
+              </a>
+          </div>
+      </div>
+    </section>
+
+    <section id="cta-section" class="w-full px-6 py-20 bg-green-50">
+      <div class="cta-card container mx-auto flex flex-col items-center gap-4 justify-between">
+        <div class="cta-title text-center">
+          <h2 class="text-3xl md:text-5xl text-blue-500 font-bold mb-4">Impressed with us?</h2>
+          <h2 class="text-3xl md:text-5xl font-bold mb-4">Let's build your brand.</h2>
+          <p class="text-lg text-gray-700" style="max-width: 600px;">Reach out to us via contact page or leave a email at <a href="" class="text-blue-600 visited:text-purple-600">info@digipalsolution.com</a> to take your business to next level</p>
+        </div>
+
+        <div class="cta-buttons flex gap-8 items-center mt-4">
+          <a href="#" class="font-medium text-gray-50 md:font-semibold px-3 py-1 md:px-5 md:py-3 rounded-full bg-blue-500 hover:bg-blue-700 transition ease-in-out duration-300">
+            Get Started
+          </a>
+          <a href="#" class="service-button font-semibold text-sm text-gray-900 flex items-center">
+            Learn More
+            <i data-feather="arrow-right" class="icon" width="18" height="18"></i>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section id="footer-section" class="w-full relative bg-gray-50" style="z-index: 100 !important;">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 justify-items-start content-between container mx-auto px-6 pt-16 pb-4">
+        <div class="digipal w-full">
+          <img src="./Digipal.svg" alt="" class="h-8">
+          <p class="mt-4">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus posuere arcu eu libero ullamcorper, at mollis massa tincidunt. Fusce accumsan lorem nec quam tincidunt hendrerit. Morbi ac cursus est, scelerisque molestie arcu. Ut dapibus bibendum felis, a interdum ligula semper in. Aliquam eget gravida tellus, vitae porta nulla.</p>
+        </div>
+
+        <div class="services-link w-full">
+          <h4 class="text-lg md:text-xl font-bold mb-4">Our Services</h4>
+          <div class="grid grid-cols-1 gap-2 magnetic-container">
+            <a href="/social-media" class="magnetic block p-2 rounded-lg flex items-center border border-transparent hover:border-blue-500 hover:bg-blue-100 transition ease-in-out duration-300">
+              <i data-feather="hash" class="text-blue-500 mr-3" width="16" height="16"></i>
+              <span class="text-base">Social Media</span>
+            </a>
+            <a href="/podcast" class="magnetic block p-2 rounded-lg flex items-center border border-transparent hover:border-green-500 hover:bg-green-100 transition ease-in-out duration-300">
+              <i data-feather="mic" class="text-green-500 mr-3" width="16" height="16"></i>
+              <span class="text-base">Podcast</span>
+            </a>
+            <a href="/web-development" class="magnetic block p-2 rounded-lg flex items-center border border-transparent hover:border-purple-500 hover:bg-purple-100 transition ease-in-out duration-300">
+              <i data-feather="code" class="text-purple-500 mr-3" width="16" height="16"></i>
+              <span class="text-base">Websites</span>
+            </a>
+            <a href="/seo" class="magnetic block p-2 rounded-lg flex items-center border border-transparent hover:border-yellow-500 hover:bg-yellow-100 transition ease-in-out duration-300">
+              <i data-feather="search" class="text-yellow-500 mr-3" width="16" height="16"></i>
+              <span class="text-base">SEO</span>
+            </a>
+            <a href="/marketing" class="magnetic block p-2 rounded-lg flex items-center border border-transparent hover:border-red-500 hover:bg-red-100 transition ease-in-out duration-300">
+              <i data-feather="volume-2" class="text-red-500 mr-3" width="16" height="16"></i>
+              <span class="text-base">Marketing</span>
+            </a>
+            <a href="/commercial-ads" class="magnetic block p-2 rounded-lg flex items-center border border-transparent hover:border-pink-500 hover:bg-pink-100 transition ease-in-out duration-300">
+              <i data-feather="monitor" class="text-pink-500 mr-3" width="16" height="16"></i>
+              <span class="text-base">Commercial Ads</span>
+            </a>
+          </div>
+        </div>
+
+        <div class="quick-links w-full">
+          <h4 class="text-lg md:text-xl font-bold mb-4">Quick Links</h4>
+          <div class="grid grid-cols-1 gap-2 magnetic-container">
+            <a href="/social-media" class="magnetic block p-2 rounded-lg flex items-center border border-transparent hover:border-blue-500 hover:bg-blue-100 transition ease-in-out duration-300">
+              <i data-feather="home" class="text-blue-500 mr-3" width="16" height="16"></i>
+              <span class="text-base">Home</span>
+            </a>
+            <a href="/podcast" class="magnetic block p-2 rounded-lg flex items-center border border-transparent hover:border-green-500 hover:bg-green-100 transition ease-in-out duration-300">
+              <i data-feather="info" class="text-green-500 mr-3" width="16" height="16"></i>
+              <span class="text-base">About</span>
+            </a>
+            <a href="/web-development" class="magnetic block p-2 rounded-lg flex items-center border border-transparent hover:border-purple-500 hover:bg-purple-100 transition ease-in-out duration-300">
+              <i data-feather="briefcase" class="text-purple-500 mr-3" width="16" height="16"></i>
+              <span class="text-base">Work</span>
+            </a>
+            <a href="/seo" class="magnetic block p-2 rounded-lg flex items-center border border-transparent hover:border-yellow-500 hover:bg-yellow-100 transition ease-in-out duration-300">
+              <i data-feather="book-open" class="text-yellow-500 mr-3" width="16" height="16"></i>
+              <span class="text-base">Insights</span>
+            </a>
+            <a href="/marketing" class="magnetic block p-2 rounded-lg flex items-center border border-transparent hover:border-red-500 hover:bg-red-100 transition ease-in-out duration-300">
+              <i data-feather="at-sign" class="text-red-500 mr-3" width="16" height="16"></i>
+              <span class="text-base">Contact</span>
+            </a>
+          </div>
+        </div>
+
+        <div class="contact-details w-full">
+          <h4 class="text-lg md:text-xl font-bold mb-4">Connect With Us</h4>
+          <div class="grid grid-cols-1 gap-2 magnetic-container">
+            <a href="tel:01-5912819" class="magnetic block p-2 rounded-lg flex items-center border border-transparent hover:border-blue-500 hover:bg-blue-100 transition ease-in-out duration-300">
+              <i data-feather="phone" class="text-blue-500 mr-3" width="16" height="16"></i>
+              <span class="text-base">01-5912819</span>
+            </a>
+            <a href="mailto:info@digipalsolution.com" class="magnetic block p-2 rounded-lg flex items-center border border-transparent hover:border-green-500 hover:bg-green-100 transition ease-in-out duration-300">
+              <i data-feather="mail" class="text-green-500 mr-3" width="16" height="16"></i>
+              <span class="text-base">info@digipalsolution.com</span>
+            </a>
+            <a href="/web-development" class="magnetic block p-2 rounded-lg flex items-center border border-transparent hover:border-purple-500 hover:bg-purple-100 transition ease-in-out duration-300">
+              <i data-feather="map-pin" class="text-purple-500 mr-3" width="16" height="16"></i>
+              <span class="text-base">Work</span>
+            </a>
+          </div>
+          <div class="social-icons flex gap-3 mt-6">
+            <a href="/web-development" class="magnetic block p-2 rounded-full flex items-center border border-blue-500 bg-blue-100 transition ease-in-out duration-300">
+              <i data-feather="facebook" class="text-blue-500" width="16" height="16"></i>
+            </a>
+            <a href="/web-development" class="magnetic block p-2 rounded-full flex items-center border border-fuchsia-500 bg-fuchsia-100 transition ease-in-out duration-300">
+              <i data-feather="instagram" class="text-fuchsia-500" width="16" height="16"></i>
+            </a>
+            <a href="/web-development" class="magnetic block p-2 rounded-full flex items-center border border-sky-500 bg-sky-100 transition ease-in-out duration-300">
+              <i data-feather="linkedin" class="text-sky-500" width="16" height="16"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-credits bg-gray-200 ">
+        <div class="container mx-auto px-6 py-2 flex flex-col-reverse md:flex-row justify-between gap-4 items-center">
+          <p class="text-sm text-medium">	&copy; 2024 Digipal Solution. All Rights Reserved.</p>
+          <div class="footer-links flex gap-3">
+            <a href="#" class="text-xs underline">Privacy</a>
+            <a href="#" class="text-xs underline">Terms</a>
+            <a href="#" class="text-xs underline">Cookies</a>
+            <a href="#" class="text-xs underline">Disclaimer</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+      // Initialize Feather Icons
+      feather.replace();
+
+      // GSAP animations
+      gsap.registerPlugin(ScrollTrigger);
+
+      ScrollTrigger.create({
+        trigger: "#hero-section",
+        start: "top top", // Trigger when the top of the hero section hits the top of the viewport
+        end: "bottom 15%", // Trigger end when the bottom of the hero section hits the top of the viewport
+        onLeave: () => {
+          gsap.to("#hero-section", { opacity: 0, duration: 1, ease: "power3.out" });
+        },
+        onEnterBack: () => {
+          gsap.to("#hero-section", { opacity: 1, duration: 1, ease: "power3.out" });
+        },
+        toggleActions: "none none none reset"
+      });
+
+      ScrollTrigger.create({
+        trigger: "#about-section",
+        start: "top top", // Trigger when the top of the hero section hits the top of the viewport
+        end: "bottom 15%", // Trigger end when the bottom of the hero section hits the top of the viewport
+        onLeave: () => {
+          gsap.to("#about-section", { opacity: 0, duration: 1, ease: "power3.out" });
+        },
+        onEnterBack: () => {
+          gsap.to("#about-section", { opacity: 1, duration: 1, ease: "power3.out" });
+        },
+        toggleActions: "none none none reset"
+      });
+
+      document.querySelectorAll('.service-card').forEach(card => {
+          gsap.fromTo(card, 
+              { opacity: 0, y: 20 }, 
+              { 
+                  opacity: 1, 
+                  y: 0, 
+                  duration: 1, 
+                  ease: 'power3.out',
+                  scrollTrigger: {
+                      trigger: card,
+                      start: 'top 85%',  // When the top of the card is 80% of the viewport height
+                      end: 'bottom 15%',  // When the bottom of the card is 20% of the viewport height
+                      toggleActions: 'play reverse play reverse',
+                      markers: false,
+                  }
+              }
+          );
+      });
+
+      // Animate the elements in the about section
+      const aboutSection = document.querySelector('#about-section');
+      const heroSection = document.querySelector('#hero-section');
+      const tabs = document.querySelectorAll('.tab-item');
+      const tabContents = document.querySelectorAll('.tab-content');
+      const workTitle = document.querySelector('.work-title');
+      const workTabs = document.querySelector('.work-tabs');
+
+      const animateWorkSection = () => {
+          gsap.fromTo(workTitle, 
+              { opacity: 0, y: -20 }, 
+              { opacity: 1, y: 0, duration: 1, ease: 'power3.out' }
+          );
+          
+          gsap.fromTo(workTabs, 
+              { opacity: 0, y: -20 }, 
+              { opacity: 1, y: 0, duration: 1, ease: 'power3.out', delay: 0.5 }
+          );
+
+          gsap.fromTo("#all", 
+              { opacity: 0, y: 20 }, 
+              { opacity: 1, y: 0, duration: 1, ease: "power3.out", delay: 1 }
+          );
+      };
+
+      // Trigger animations on page load
+      animateWorkSection();
+
+      // Set up tab click event listeners
+      tabs.forEach(tab => {
+          tab.addEventListener('click', () => {
+              // Remove active class from all tabs and hide all content
+              tabs.forEach(item => item.classList.remove('active-tab'));
+              tabContents.forEach(content => content.classList.add('hidden'));
+
+              // Add active class to clicked tab
+              tab.classList.add('active-tab');
+
+              // Get the selected tab content
+              const targetContent = document.getElementById(tab.dataset.tab);
+
+              // Animate fade out of existing content
+              gsap.fromTo(tabContents, 
+                  { opacity: 1 }, 
+                  { opacity: 0, duration: 0.5, onComplete: () => {
+                      // Hide all tab contents after fade out
+                      tabContents.forEach(content => content.classList.add('hidden'));
+
+                      // Show and animate fade-in of the target content
+                      targetContent.classList.remove('hidden');
+                      gsap.fromTo(targetContent, 
+                          { opacity: 0, y: 20 }, 
+                          { opacity: 1, y: 0, duration: 0.8, ease: "power3.out" });
+                  }}
+              );
+          });
+      });
+
+      gsap.fromTo(".hero-image", 
+        { opacity: 0, scale: 0.8 }, 
+        { opacity: 1, scale: 1, duration: 1, ease: "power3.out", delay: 1 }
+      );
+
+      gsap.fromTo(heroSection.querySelectorAll('.hero-title, .hero-description, .hero-subtitle'),
+          { opacity: 0, y: 50 },
+          {
+              opacity: 1,
+              y: 0,
+              duration: 1,
+              ease: "power3.out",
+              stagger: 0.2,
+              scrollTrigger: {
+                  trigger: heroSection,
+                  start: 'top 80%',
+                  end: 'bottom 20%',
+                  toggleActions: 'play none none reverse', // Play on enter, reverse on leave
+              }
+          }
+      );
+      
+
+      gsap.fromTo(aboutSection.querySelectorAll('.about-title, .about-description'),
+          { opacity: 0, y: 50 },
+          {
+              opacity: 1,
+              y: 0,
+              duration: 1,
+              ease: "power3.out",
+              stagger: 0.2,
+              scrollTrigger: {
+                  trigger: aboutSection,
+                  start: 'top 80%',
+                  end: 'bottom 20%',
+                  toggleActions: 'play none none reverse', // Play on enter, reverse on leave
+              }
+          }
+      );
+
+      const animateAboutSection = () => {
+        gsap.fromTo(".about-card-item", 
+            { opacity: 0, y: 30 }, 
+            { opacity: 1, y: 0, duration: 1, ease: "power3.out", stagger: 0.2 }
+        );
+      };
+
+      gsap.fromTo(".gsap-button", 
+        { opacity: 0, scale: 0.5 }, 
+        { opacity: 1, scale: 1, duration: 1, ease: "back.out(1.7)", delay: 0.9 }
+      );
+
+      const observer = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+              if (entry.isIntersecting) {
+                  animateAboutSection();
+                  observer.unobserve(entry.target); // Trigger animation only once
+              }
+          });
+      }, { threshold: 0.3 });
+
+      observer.observe(document.getElementById('about-section'));
+  });
+</script>
+
+</body>
+</html>
