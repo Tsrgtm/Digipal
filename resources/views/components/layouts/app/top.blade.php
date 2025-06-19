@@ -12,7 +12,7 @@
         <x-app-header />
     </div>
 
-    <main>
+    <main class="max-w-[100vw] w-full overflow-x-hidden">
         {{ $slot }}
     </main>
 
